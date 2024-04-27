@@ -1,0 +1,80 @@
+
+name: CI
+on:
+    pull_request:
+
+    push:
+        branches: [ master, main ]
+
+env:
+  VERBOSE: 1
+
+jobs:
+  Test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+
+      matrix:
+        compiler:
+          - llvm-17  # Latest version as of 2023-11-28 (last version of llvm-17)
+          - gcc-13
+        generator:
+          - "Ninja Multi-Config"
+        build_type:
+          - Debug
+          - Release
+          - RelWithDebInfo
+        packaging_maintainer_mode:
+          - OFF
+        build_shared:
+          - OFF
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Cache
+        uses: ./.github/actions/setup_cache
+        with:
+          compiler: ${{ matrix.compiler }}
+          build_type: ${{ matrix.build_type }}
+          packaging_maintainer_mode: ${{ matrix.packaging_maintainer_mode }}
+          generator: ${{ matrix.generator }}
+
+      - name: ⚙️ Setup C++ Tools - Linux 🐧
+        if: runner.os == 'Linux' || runner.os == 'Windows'
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+
+          cmake: true
+          ninja: true
+          vcpkg: false
+          ccache: true
+          clangtidy: true
+          cppcheck: true
+
+          gcovr: true
+          opencppcoverage: true
+
+      - name: Setup Mold linker for Linux 🐧 builds
+        if: runner.os == 'Linux'
+        uses: rui314/setup-mold@v1
+
+      - name: Set environment variable based on matrix
+        run: |
+          echo "USE_CLANG=$( \
+            [[ '${{ contains(matrix.compiler, 'llvm') }} == 'true' ]] && echo 1 \
+              || echo 0 )" >> $GITHUB_ENV
+
+      - name: Build dev-container
+        run: just build-devcontainer
+
+      - name: 🔧 Configure Cmake
+        run: just configure-project
+
+      - name: ⚒️ Build
+        run: just build ${{ matrix.build_type }}
+
+      - name: 🐧 Test & coverage
+        run: just ctest-coverage
