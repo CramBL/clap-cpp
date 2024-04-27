@@ -13,7 +13,7 @@ CMD := if path_exists('/in_container') == "true" {
 + " -e CXX=" + CXX \
 + " -v " + PWD + ":/work" \
 + " --rm" \
-+ " -it " + DEVCONTAINER_NAME \
++ " -t " + DEVCONTAINER_NAME \
 + " /bin/bash -lc "
 }
 
