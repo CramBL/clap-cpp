@@ -41,21 +41,7 @@ jobs:
           packaging_maintainer_mode: ${{ matrix.packaging_maintainer_mode }}
           generator: ${{ matrix.generator }}
 
-      - name: ⚙️ Setup C++ Tools - Linux 🐧
-        if: runner.os == 'Linux' || runner.os == 'Windows'
-        uses: aminya/setup-cpp@v1
-        with:
-          compiler: ${{ matrix.compiler }}
-
-          cmake: true
-          ninja: true
-          vcpkg: false
-          ccache: true
-          clangtidy: true
-          cppcheck: true
-
-          gcovr: true
-          opencppcoverage: true
+      - uses: extractions/setup-just@v2
 
       - name: Setup Mold linker for Linux 🐧 builds
         if: runner.os == 'Linux'
