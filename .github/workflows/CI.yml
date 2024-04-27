@@ -64,7 +64,7 @@ jobs:
       - name: Set environment variable based on matrix
         run: |
           echo "USE_CLANG=$( \
-            [[ '${{ contains(matrix.compiler, 'llvm') }} == 'true' ]] && echo 1 \
+            [[ ${{ contains(matrix.compiler, 'llvm') }} == 'true' ]] && echo 1 \
               || echo 0 )" >> $GITHUB_ENV
 
       - name: Build dev-container
